@@ -1,4 +1,4 @@
-"""Compute each person's balance for an equal split."""
+"""Compute each person's balance after splitting shared expenses."""
 from decimal import ROUND_HALF_EVEN, Decimal
 
 CENT = Decimal("0.01")
@@ -18,12 +18,12 @@ def compute_balances(expenses):
 
     Positive means the person owes money; negative means they are owed.
     An expense is split among its participants; if it lists none, among
-    everyone who appears in the file (as a payer or a participant).
+    everyone who paid in any row. Participants must be payers (the parser
+    enforces this), and display names come from the first payer spelling.
     """
-    people = {}  # key -> display name (first spelling seen)
+    people = {}  # key -> display name (first payer spelling seen)
     for e in expenses:
-        for name in (e.payer, *e.participants):
-            people.setdefault(name_key(name), _clean(name))
+        people.setdefault(name_key(e.payer), _clean(e.payer))
     if not people:
         return {}
 

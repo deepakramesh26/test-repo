@@ -3,6 +3,8 @@ import csv
 from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
+from .calculator import name_key
+
 REQUIRED_COLUMNS = ("payer", "amount", "description")
 
 
@@ -33,6 +35,7 @@ def parse_expenses(lines):
     reader.fieldnames = fields
 
     expenses = []
+    lines = []
     for row in reader:
         line = reader.line_num
         payer = (row["payer"] or "").strip()
@@ -47,6 +50,13 @@ def parse_expenses(lines):
         description = (row["description"] or "").strip()
         participants = _split_participants(row.get("participants"))
         expenses.append(Expense(payer, amount, description, participants))
+        lines.append(line)
+
+    payers = {name_key(e.payer) for e in expenses}
+    for line, e in zip(lines, expenses):
+        for name in e.participants:
+            if name_key(name) not in payers:
+                raise ExpenseError(f"line {line}: participant {name!r} is not a payer in any row")
     return expenses
 
 

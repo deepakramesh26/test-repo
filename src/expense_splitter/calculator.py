@@ -1,6 +1,8 @@
 """Compute each person's balance after splitting shared expenses."""
 from decimal import ROUND_HALF_EVEN, Decimal
 
+from .errors import ExpenseError
+
 CENT = Decimal("0.01")
 
 
@@ -34,6 +36,8 @@ def compute_balances(expenses):
         group = {name_key(p) for p in e.participants} or set(people)
         share = e.amount / len(group)
         for key in group:
+            if key not in owed:
+                raise ExpenseError(f"participant {key!r} is not a payer in any row")
             owed[key] += share
 
     return {

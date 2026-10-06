@@ -4,12 +4,9 @@ from dataclasses import dataclass
 from decimal import Decimal, InvalidOperation
 
 from .calculator import name_key
+from .errors import ExpenseError
 
 REQUIRED_COLUMNS = ("payer", "amount", "description")
-
-
-class ExpenseError(ValueError):
-    """Raised when the input CSV is malformed."""
 
 
 @dataclass(frozen=True)
@@ -48,7 +45,10 @@ def parse_expenses(lines):
         if not amount.is_finite() or amount < 0:
             raise ExpenseError(f"line {line}: amount must be a non-negative number")
         description = (row["description"] or "").strip()
-        participants = _split_participants(row.get("participants"))
+        cell = row.get("participants")
+        participants = _split_participants(cell)
+        if cell and cell.strip() and not participants:
+            raise ExpenseError(f"line {line}: participants has separators but no names")
         expenses.append(Expense(payer, amount, description, participants))
         lines.append(line)
 

@@ -4,7 +4,7 @@ import pytest
 
 from expense_splitter.calculator import compute_balances
 from expense_splitter.cli import main
-from expense_splitter.parser import ExpenseError, _split_participants, parse_expenses
+from expense_splitter.parser import Expense, ExpenseError, _split_participants, parse_expenses
 
 CSV = ["payer,amount,description", "Alice,30,Dinner", "Bob,10.50,Taxi", "Carol,0,Nothing"]
 
@@ -96,6 +96,18 @@ def test_subset_split():
 def test_unknown_participant_raises_with_line_number():
     with pytest.raises(ExpenseError, match=r"line 3.*'Bbo'"):
         parse_expenses(_rows("Alice,10,x,", "Bob,5,y,Alice;Bbo"))
+
+
+@pytest.mark.parametrize("cell", [";", "; ;", " ;; "])
+def test_separator_only_participants_raises_with_line_number(cell):
+    with pytest.raises(ExpenseError, match=r"line 3.*no names"):
+        parse_expenses(_rows("Alice,10,x,", f"Bob,5,y,{cell}"))
+
+
+def test_compute_balances_unknown_participant_raises_expense_error():
+    expenses = [Expense("Alice", Decimal(10), "x", ("Zed",))]
+    with pytest.raises(ExpenseError, match="zed"):
+        compute_balances(expenses)
 
 
 def test_unknown_participant_matches_case_and_whitespace_of_payer():

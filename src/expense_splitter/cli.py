@@ -27,7 +27,11 @@ def main(argv=None):
         prog="expense-splitter",
         description="Show how much each person owes for an equal split.",
     )
-    parser.add_argument("csv_file", help="CSV with columns: payer, amount, description")
+    parser.add_argument(
+        "csv_file",
+        help="CSV with columns: payer, amount, description "
+        "[, participants (semicolon-separated; blank = everyone)]",
+    )
     args = parser.parse_args(argv)
     try:
         expenses = load_expenses(args.csv_file)

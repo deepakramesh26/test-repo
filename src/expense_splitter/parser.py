@@ -15,6 +15,12 @@ class Expense:
     payer: str
     amount: Decimal
     description: str
+    participants: tuple = ()
+
+
+def _split_participants(cell):
+    """Split a semicolon-separated cell into trimmed, non-empty names."""
+    return tuple(p.strip() for p in (cell or "").split(";") if p.strip())
 
 
 def parse_expenses(lines):
@@ -38,7 +44,9 @@ def parse_expenses(lines):
             raise ExpenseError(f"line {line}: invalid amount {row['amount']!r}") from None
         if not amount.is_finite() or amount < 0:
             raise ExpenseError(f"line {line}: amount must be a non-negative number")
-        expenses.append(Expense(payer, amount, (row["description"] or "").strip()))
+        description = (row["description"] or "").strip()
+        participants = _split_participants(row.get("participants"))
+        expenses.append(Expense(payer, amount, description, participants))
     return expenses
 
 

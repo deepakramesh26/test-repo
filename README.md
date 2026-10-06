@@ -17,6 +17,12 @@ A small practice repository for experimenting with git and Claude Code.
 prints how much each person owes so everyone pays an equal share. Everyone who
 appears as a payer is included in the split.
 
+An optional fourth column, `participants`, lists the people (separated by `;`,
+e.g. `alice;bob`) an expense is split between. If it is blank, the expense is
+split among everyone who appears in the file. Names are matched
+case-insensitively and ignoring extra spaces. See
+`docs/sample_expenses_participants.csv`.
+
 ### Install
 
 ```

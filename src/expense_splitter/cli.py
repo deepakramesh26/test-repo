@@ -25,9 +25,13 @@ def format_report(balances):
 def main(argv=None):
     parser = argparse.ArgumentParser(
         prog="expense-splitter",
-        description="Show how much each person owes for an equal split.",
+        description="Show how much each person owes after splitting shared expenses.",
     )
-    parser.add_argument("csv_file", help="CSV with columns: payer, amount, description")
+    parser.add_argument(
+        "csv_file",
+        help="CSV with columns: payer, amount, description "
+        "[, participants (semicolon-separated payers; blank = all payers)]",
+    )
     args = parser.parse_args(argv)
     try:
         expenses = load_expenses(args.csv_file)

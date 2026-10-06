@@ -14,8 +14,15 @@ A small practice repository for experimenting with git and Claude Code.
 ## Getting started
 
 `expense-splitter` reads a CSV of expenses (`payer,amount,description`) and
-prints how much each person owes so everyone pays an equal share. Everyone who
-appears as a payer is included in the split.
+prints how much each person owes. By default every expense is split equally
+among everyone who appears as a payer in the file.
+
+An optional fourth column, `participants`, lists the people (separated by `;`,
+e.g. `alice;bob`) an expense is split between. If it is blank, the expense is
+split among all payers. Every participant must also be a payer in some row,
+otherwise the file is rejected with a line-numbered error (this catches
+typos). Names are matched case-insensitively and ignoring extra spaces, and the
+report uses the payer's spelling. See `docs/sample_expenses_participants.csv`.
 
 ### Install
 

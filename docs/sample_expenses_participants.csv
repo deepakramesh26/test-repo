@@ -1,0 +1,5 @@
+payer,amount,description,participants
+Alice,60,Groceries,
+Bob,20,Taxi,bob; ALICE
+Carol,10.00,Snacks,alice;bob;carol
+Dave,0,Tagged along,

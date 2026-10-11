@@ -4,6 +4,9 @@ from decimal import ROUND_HALF_EVEN, Decimal
 from .errors import ExpenseError
 
 CENT = Decimal("0.01")
+# Precision used to rank rounding errors when handing out leftover cents.
+# Far finer than a cent, far coarser than Decimal's 28-digit division noise.
+TIE_EPS = Decimal("1e-12")
 
 
 def _clean(name):
@@ -40,7 +43,25 @@ def compute_balances(expenses):
                 raise ExpenseError(f"participant {key!r} is not a payer in any row")
             owed[key] += share
 
-    return {
-        people[key]: (owed[key] - paid[key]).quantize(CENT, rounding=ROUND_HALF_EVEN)
-        for key in sorted(people)
-    }
+    keys = sorted(people)
+    exact = {key: owed[key] - paid[key] for key in keys}
+    balances = {key: exact[key].quantize(CENT, rounding=ROUND_HALF_EVEN) for key in keys}
+
+    # Exact balances sum to zero; rounding may leave a few cents over or
+    # under. Largest-remainder: give each cent to the person rounding hurt
+    # most (ties broken by sorted name), so no one moves further than a cent.
+    leftover = int(-sum(balances.values()) / CENT)
+    if leftover:
+        sign = 1 if leftover > 0 else -1
+        # Errors are bucketed to TIE_EPS so last-digit division noise doesn't
+        # decide between people whose true errors are equal; sorted() is
+        # stable, so ties keep name order. This is a bucket, not a tolerance:
+        # it can't separate errors closer than TIE_EPS, and in principle an
+        # equal pair straddling a bucket edge could still split.
+        by_error = sorted(
+            keys, key=lambda k: -sign * (exact[k] - balances[k]).quantize(TIE_EPS)
+        )
+        for key in by_error[:abs(leftover)]:
+            balances[key] += sign * CENT
+
+    return {people[key]: balances[key] for key in keys}

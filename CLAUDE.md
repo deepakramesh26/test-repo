@@ -26,8 +26,8 @@ Package `src/expense_splitter/` is a three-stage pipeline wired together by `cli
 3. `cli.py`: formats the report and maps `OSError`/`ExpenseError` to `error: ...` on stderr with exit code 1.
 
 Behaviors that aren't obvious from a single file:
-- Amounts are `Decimal` throughout (never float); balances are quantized to cents with banker's rounding, so balances may not sum to exactly zero.
+- Amounts are `Decimal` throughout (never float); balances are quantized to cents with banker's rounding, then leftover cents are redistributed so balances always sum to exactly zero (see below).
 - An optional `participants` column (semicolon-separated names) restricts an expense's split to those people. If blank or absent, the expense is split among all payers (people with at least one payer row). Every participant must match a payer, otherwise `parse_expenses` raises `ExpenseError` with the line number; a payer not listed as a participant is credited but not charged.
 - Names are matched case-insensitively with whitespace collapsed (`name_key` in `calculator.py`, also used by the parser); the report shows the first payer spelling seen. Payers `Alice` and `alice` are the same person.
-- Shares are accumulated exactly and each balance is quantized once at the end, so uneven splits can leave balances a cent off in total.
+- Shares are accumulated exactly and each balance is quantized once at the end. Any cents left over from rounding are assigned one at a time by largest remainder (to whoever rounding moved furthest in the needed direction, ties broken by sorted name key), so balances sum to exactly 0.00 and no one moves more than a cent from their rounded value.
 - Header names are case-insensitive and whitespace-trimmed; the CSV is read with `utf-8-sig`, so a BOM is tolerated.
